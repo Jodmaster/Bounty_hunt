@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>JavaScript colourclickygameything </title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" type="text/css" href="game_style_sheet.css">
+	<img id="face_01" src="Faces/Face_01.png" width="64" height="64" style="display:none">
+	<img id="face_02" src="Faces/Face_02.png" width="64" height="64" style="display:none">
+	<img id="face_03" src="Faces/Face_03.png" width="64" height="64" style="display:none">
+	<img id="face_04" src="Faces/Face_04.png" width="64" height="64" style="display:none">
+	<img id="face_05" src="Faces/Face_05.png" width="64" height="64" style="display:none">
+	<img id="face_06" src="Faces/Face_06.png" width="64" height="64" style="display:none">
+	<img id="face_07" src="Faces/Face_07.png" width="64" height="64" style="display:none">
+	<img id="face_08" src="Faces/Face_08.png" width="64" height="64" style="display:none">
+	<img id="face_09" src="Faces/Face_09.png" width="64" height="64" style="display:none">
+	<img id="face_10" src="Faces/Face_10.png" width="64" height="64" style="display:none">
+	<img id="face_11" src="Faces/Face_11.png" width="64" height="64" style="display:none">
+	<img id="face_12" src="Faces/Face_12.png" width="64" height="64" style="display:none">
+	<img id="face_13" src="Faces/Face_13.png" width="64" height="64" style="display:none">
+	<img id="face_14" src="Faces/Face_14.png" width="64" height="64" style="display:none">
+	<img id="face_15" src="Faces/Face_15.png" width="64" height="64" style="display:none">
+	<img id="face_16" src="Faces/Face_16.png" width="64" height="64" style="display:none">
+	<img id="face_17" src="Faces/Face_17.png" width="64" height="64" style="display:none">
+	<img id="face_18" src="Faces/Face_18.png" width="64" height="64" style="display:none">
+	<img id="face_19" src="Faces/Face_19.png" width="64" height="64" style="display:none">
+	<img id="face_20" src="Faces/Face_20.png" width="64" height="64" style="display:none">
+</head>
+
+<body onload="clicky_namespace.display_leaderboard()">
+	<div class="grid-container">
+
+		<div class="title">
+			<h1>Bounty Hunt</h1>
+			<h2>Find your Target</h2>
+		</div>
+
+		<div class="scores">
+			<table id="names_scores"><caption>Top Scores</caption>
+				<thead>
+					<tr>
+						<th> Username </th>
+						<th> Score </th>
+					</tr>
+				</thead>
+				<tbody id="top_scores">
+				</tbody>
+			</table>
+		</div>
+
+		<div class="game_canvas" >
+			<canvas id="colour_click_canv"></canvas>
+		</div>
+
+		<div class="instructions">
+			<h1>Instructions</h1>
+			Find and click on the target, the faster you find your target the better your score! You have three, ten second rounds and a different target every time.
+			If you run out of time or miss you score ZERO.
+			<br>
+			<br>
+			This game is best played on the firefox browser at or above 1080p monitor resolution.
+			<h2>Reference and Acknowledgements</h2>
+			This Game is loosely based on <a href="https://crowbarska.itch.io/only-one"> singled out </a> by Matt Glanville.
+			<br>
+			<br>
+			The Font used is <a href="https://www.1001freefonts.com/alien-fonts.php"> Quirky robot </a> by Star Kwafie.
+			<br>
+			<br>
+			All Faces were created using <a href="https://www.pixilart.com/draw#"> PixilArt </a>
+		</div>
+	</div>
+
+<script>
+	const clicky_namespace = function () { // use a function to hide all the script's identifiers except for start_game which is used by the HTML document
+
+		//gets all the face images for use in the game
+		var face0=document.getElementById("face_01");
+		var face1=document.getElementById("face_02");
+		var face2=document.getElementById("face_03");
+		var face3=document.getElementById("face_04");
+		var face4=document.getElementById("face_05");
+		var face5=document.getElementById("face_06");
+		var face6=document.getElementById("face_07");
+		var face7=document.getElementById("face_08");
+		var face8=document.getElementById("face_09");
+		var face9=document.getElementById("face_10");
+		var face10=document.getElementById("face_11");
+		var face11=document.getElementById("face_12");
+		var face12=document.getElementById("face_13");
+		var face13=document.getElementById("face_14");
+		var face14=document.getElementById("face_15");
+		var face15=document.getElementById("face_16");
+		var face16=document.getElementById("face_17");
+		var face17=document.getElementById("face_18");
+		var face18=document.getElementById("face_19");
+		var face19=document.getElementById("face_20");
+
+		//stores top 10 names and scores for the leaderboard
+		var the_leaderboard = {names_scores:[], max_entries:10};
+		//name of current player for use in saving to the database
+		var player_name;
+
+		//used for the in round countdown
+		var countDownStart;
+		var countdownInterval;
+
+		//used for the creation of the circles
+		var circles = [];
+		var colours = []
+		var faces = [];
+		var target;
+		const radius = 20;
+
+		//used for running of the game
+		var animRun;
+		var totalScore = 0;
+		var round;
+		var numOfRounds = 3;
+		var inbetweenRoundTimer = 4;
+		var startRoundTimer;
+		var roundStartTime;
+
+		var gameStarted = false;
+		var loaded = false;
+		//gets canvas
+        const canv = document.getElementById("colour_click_canv");
+        const ctx = canv.getContext("2d");
+
+		//resizes canvas based on screen size
+		canv.width = window.innerWidth - (window.innerWidth*0.30);
+		canv.height = window.innerHeight - (window.innerHeight*0.25);
+
+		//sets all variables up for the start of a new round
+		function start_round(){
+			//empties the circle array for the new circles to be inserted into
+			circles = [];
+			//clears everything off the canvas
+			ctx.clearRect(0,0,canv.width,canv.height);
+
+			faces = [face0, face1, face2, face3, face4, face5, face6, face7, face8, face9, face10, face11, face12, face13, face14, face15, face16, face17, face18, face19];
+
+			//resets target and then selects a new one
+			target = null;
+			target = selectTarget();
+			gameStarted = true;
+
+			//sets the time between rounds in this case 10 seconds
+			countDownStart = 10;
+			//controls the number of the countdown changing each second
+			countdownInterval = setInterval(countDown, 1000);
+
+			//creates the circles
+			createFaces();
+
+			//gets the start time of the round (for score)
+			roundStartTime = new Date
+		}
+
+		//deals with the end of each round, async because we are using an await to pause the end round for a given amount of time
+		async function end_round(reason) {
+			//freezes game while end of round is going on
+			clearInterval(countdownInterval);
+			canv.removeEventListener('click', function(e){seenaclick(e)})
+			circles = [];
+			animRun = false;
+			ctx.fillStyle = "#050505";
+			ctx.font = "90px Arial";
+
+			//switch case depending on how the game ended, for hit the points are also added to the total
+			switch (reason) {
+				case "time":
+					ctx.fillText("Times Up!", canv.width * 0.5, canv.height * 0.5);
+					ctx.font = "30px Arial";
+					ctx.fillText("No points, times up.", canv.width * 0.51, canv.height * 0.55);
+					ctx.fillText("Total Points: " + totalScore.toString(), canv.width * 0.51, canv.height * 0.6);
+					round++;
+					break;
+
+				case "hit":
+					ctx.fillText("Hit!", canv.width * 0.5, canv.height * 0.5);
+					var endTime = new Date;
+					var points = 10000 - (endTime - roundStartTime);
+					ctx.font = "30px Arial";
+					ctx.fillText("Points: " + points.toString(), canv.width * 0.5, canv.height * 0.55);
+					totalScore += points;
+					ctx.fillText("Total Points: " + totalScore.toString(), canv.width * 0.5, canv.height * 0.6);
+					round++;
+					break;
+
+				case "miss":
+					ctx.fillText("Miss!", canv.width * 0.5, canv.height * 0.5);
+					ctx.font = "30px Arial";
+					ctx.fillText("No points, you missed.", canv.width * 0.5, canv.height * 0.55);
+					ctx.fillText("Total Points: " + totalScore.toString(), canv.width * 0.5, canv.height * 0.6);
+					round++;
+					break;
+			}
+
+			//makes the program wait for 1.5 seconds
+			await wait(1500);
+
+			//if reached max number of rounds run stop game, else start next round
+			if(round == numOfRounds){
+				stop_game();
+			} else {
+				inbetweenRoundTimer = 4;
+				round_Start_Countdown();
+				startRoundTimer = setInterval(round_Start_Countdown, 1000);
+			}
+		}
+
+        function start_game_screen() {
+			//disables button if game already running
+			if(gameStarted){
+				return;
+			}
+
+			//draws the canvas background
+			draw_canvas_backGround();
+
+			//draws welcome rectangle
+			ctx.fillStyle = "#8696a6";
+			ctx.fillRect(canv.width*0.36, canv.height * 0.25, canv.width*0.3, canv.height*0.2);
+
+			//draws welcome text
+			ctx.fillStyle = ctx.fillStyle = "#050505";
+			ctx.font = "90px Arial";
+			ctx.fillText("Welcome" , canv.width*0.37, (canv.height * 0.38));
+
+			//draws start button background
+			ctx.fillStyle = "#8696a6";
+			ctx.fillRect(canv.width*0.415, canv.height * 0.5, canv.width*0.2, canv.height*0.1);
+
+			//draws start button text
+			ctx.fillStyle = ctx.fillStyle = "#050505";
+			ctx.font = "40px Arial";
+			ctx.fillText("click to start" , canv.width*0.438, (canv.height * 0.567));
+
+			//adds a click listener so we know when to start the game
+			if(!loaded){
+				canv.addEventListener('click', function(e){seenaclick(e)});
+				loaded = true;
+			}
+        }
+
+        function stop_game(){
+			//clears the countdown so it doesn't keep runnning
+			clearInterval(countdownInterval);
+			gameStarted = false;
+
+			//sets animRun to false so the circles no longer move
+			animRun = false;
+
+			//clears the circle array
+			circles = [];
+
+			//clears the canvas but keeps background color
+			ctx.clearRect(0,0,canv.width,canv.height);
+			draw_canvas_backGround();
+
+			//draws Game over rectangle
+			ctx.fillStyle = "#8696a6";
+			ctx.fillRect(canv.width*0.3, canv.height * 0.25, canv.width*0.4, canv.height*0.2);
+
+			//draws Game over text
+			ctx.fillStyle = ctx.fillStyle = "#050505";
+			ctx.font = "90px Arial";
+			ctx.fillText("Game Over" , canv.width*0.325, (canv.height * 0.38));
+
+			//draws final score background
+			ctx.fillStyle = "#8696a6";
+			ctx.fillRect(canv.width*0.415, canv.height * 0.5, canv.width*0.2, canv.height*0.15);
+
+			//draws start button text
+			ctx.fillStyle = ctx.fillStyle = "#050505";
+			ctx.font = "40px Arial";
+			ctx.fillText("Final Score: " , canv.width*0.438, (canv.height * 0.567));
+			ctx.fillText(totalScore.toString() , canv.width*0.475, (canv.height * 0.633));
+
+
+			if(confirm("Would you like to save your score?")){
+				player_name = window.prompt("Username: ");
+				save_score();
+			}
+
+			if(confirm("Would you like to play again?")){
+				start_game();
+			} else {
+				start_game_screen();
+			}
+        }
+
+		//sets up some basic parameters for the rest of the game
+		function start_game(){
+			//if the game is already started do nothing used to avoid some booky behaviour occurring
+			if(gameStarted){
+				return;
+			}
+
+			//sets the round to zero
+			round = 0;
+			totalScore = 0;
+
+
+			//starts the first round
+			start_round();
+		}
+
+		//generates to random points within the bound of the canvas
+		function generate_random_point(){
+			//gets width and height of the canvas to bound the range of values to pick from
+			var width = canv.width;
+			var height = canv.height;
+
+			//setting start and cap of the range of numbers to generate within, with a 10% buffer from the edges of the canvas
+			var x_cap = width - (width*0.1);
+			var y_cap = height - (height*0.1);
+			var x_start = 0 + (width*0.1);
+			var y_start = 0 + (width*0.1);
+
+			//generates a random x and y value
+			var x = Math.floor((Math.random() * (x_cap - x_start) + x_start));
+			var y = Math.floor((Math.random() * (y_cap - y_start) + y_start));
+
+			//puts the values into an array and then returns it
+			return [x, y];
+		}
+
+		//loops through the faces array and picks a random face to pick
+		function face_to_pick(){
+			var index = Math.floor(Math.random() * colours.length);
+			var face = faces[index]
+			faces.splice(index, 1);
+			return face
+		}
+
+		//selects a random target
+		function selectTarget(){
+			//picks a random target from the range of faces
+			var targetSelect = Math.floor(Math.random() * 20);
+			return targetSelect;
+		}
+
+		//draws a square around the target
+		function draw_target_frame(){
+			ctx.fillStyle = "#8696a6";
+			ctx.fillRect(canv.width/(canv.width/(canv.height))*0.02, (canv.height * 0.025), canv.width*0.09, canv.height*0.16);
+		}
+
+		//draws a square around the round countdown
+		function draw_countdown_frame(){
+			ctx.fillStyle = "#8696a6";
+			ctx.fillRect(canv.width/(canv.width/(canv.height))*1.6, (canv.height * 0.025), canv.width*0.10, canv.height*0.16);
+		}
+
+		//draws blue background on the canvas
+		function draw_canvas_backGround(){
+			ctx.fillStyle = "#cae6e5";
+			ctx.fillRect(0,0,canv.width,canv.height);
+		}
+
+		//controls the round timer
+		function countDown(){
+			countDownStart--;
+
+			//if the countdown is zero end the game as the player ran out of time
+			if(countDownStart < 0){
+				end_round("time");
+			}
+		}
+
+		//controls the countdown between rounds
+		function round_Start_Countdown(){
+			//decrements the current number to display
+			inbetweenRoundTimer--;
+
+			//if the countdown timer is 0 start the round
+			if(inbetweenRoundTimer <= 0) {
+				//if zero clear the interval controlling this function and start the round
+				clearInterval(startRoundTimer);
+				start_round();
+			}
+
+			//clears the canvas
+			ctx.clearRect(0,0,canv.width,canv.height);
+			ctx.font = "90px Arial";
+
+			//draws canvas background
+			draw_canvas_backGround();
+
+			//prints the number the countdown is currently on
+			ctx.fillStyle = "#050505";
+			ctx.fillText(inbetweenRoundTimer.toString(), canv.width*0.5, (canv.height * 0.5));
+		}
+
+		//pauses the program for the time passed
+		function wait(time){
+			return new Promise(resolve => setTimeout(resolve, time));
+		}
+
+		function get_mouse_position(mouse_event){
+			//gets the limits of the canvas
+			var bounding_box = canv.getBoundingClientRect();
+
+			//finds the mouse position within the bounds of the canvas and creates a new vector
+			var mousex = (mouse_event.clientX-bounding_box.left) * (canv.width/bounding_box.width);
+			var mousey = (mouse_event.clientY-bounding_box.top) * (canv.height/bounding_box.height);
+			var mousePos = new Vector(mousex, mousey);
+
+			//returns this new vector
+			return mousePos;
+		}
+
+		//added a lot of random variance to the faces to add interest to the game every time it's played
+		function createFaces(){
+			var currentFace = 0;
+			for(var x = 0; x < 20; x++){
+				//sets up attributes for faces
+				var points = generate_random_point();
+				//generates a starting point for the faces
+				var xPos = points[0], yPos = points[1];
+				//speeds very between 0.01 and 0.99 to variance to the movement
+				var speed = Math.random() * 0.1 + 0.01;
+				//distance worked out to between 100 and 500 to add variance to the movement
+				var distance = Math.random() * (400) + 100;
+				//chooses a new random direction to travel in
+				var direction = chooseNewDirection();
+				//picks a face to assign
+				var face_to_show = face_to_pick();
+				//get time of creation of faces
+				var t = new Date();
+				var creationTime = t.getTime();
+
+				//checks to see if this face should be the target
+				var shouldBeTarget = false;
+				if(currentFace == target){
+					shouldBeTarget = true;
+				}
+
+				//creates new face and adds it to circle array
+				var face = new circle(xPos, yPos, distance, direction, speed, creationTime, 1, currentFace, shouldBeTarget, face_to_show);
+				currentFace++;
+				//finally add the new face to the face array
+				circles.push(face);
+			}
+
+			//sets animRun to true so the animation is not halted and calls drawandupdate to start the animation
+			animRun = true;
+			drawAndUpdate();
+		}
+
+		//loops through all the cicles to update their position and updates the countdowntime if required
+		function drawAndUpdate(){
+			//returns immediately so not run when it isn't supposed to
+			if(!animRun){
+				return;
+			}
+			//clears canvas ready for next frame
+			ctx.clearRect(0,0,canv.width,canv.height);
+
+			//draws on colored background
+			draw_canvas_backGround();
+
+			//draws frame for the countdown
+			draw_countdown_frame();
+
+			//draws countdown number
+			ctx.fillStyle = "#050505";
+			ctx.font = "90px Arial";
+			if(countDownStart < 10) {
+				ctx.fillText(countDownStart.toString(), canv.width*0.92, (canv.height * 0.15))
+			} else {
+				ctx.fillText(countDownStart.toString(), canv.width*0.90, (canv.height * 0.15));
+			}
+
+			//draws rectangle around target
+			draw_target_frame();
+
+			//loops through all the faces in the face array for update
+			for(var x = 0; x < circles.length; x++){
+				if(circles[x].isTarget){
+					circles[x].drawTarget();
+				}
+
+				//get a face object from the face array
+				var faceToWork = circles[x];
+
+				//get the current time for use in the update function
+				var t = new Date();
+				var currentTime = t.getTime();
+				var time = currentTime - faceToWork.creationTime;
+
+				faceToWork.update(time);
+			}
+
+			//requests next frame of animation
+			requestAnimationFrame(drawAndUpdate);
+		}
+
+		function hit_Target(mouse_event){
+			//loops through all the faces in the circles array
+			for(var x = 0; x < circles.length; x++){
+				var circleToCheck = circles[x];
+
+				//if the selected circle is not the target skip
+				if(circleToCheck.isTarget == false){
+					continue;
+				}
+
+				//if the selected face is the target get the difference between the mouse and the face(center)
+				var diff = circleToCheck.position.difference(get_mouse_position(mouse_event));
+
+				//if the difference is less than 30 pixels in the x and y direction it a hit otherwise a miss
+				if((diff.x < 30 && diff.x > -30) && (diff.y < 30 && diff.y > -30)){
+					end_round("hit");
+				} else {
+					end_round("miss");
+				}
+			}
+		}
+
+		function seenaclick(e) {
+			//if game started is true run the hit target function else the start_game function
+			if(gameStarted){
+				hit_Target(e);
+			} else {
+				start_game();
+			}
+		}
+
+		//chooses a random direction to travel in
+		function chooseNewDirection(){
+			//picks a random point on a circle
+			var angle = (Math.random() * Math.PI * 2.0) - Math.PI;
+			//since we want our direction vector to be a unit vector(for consistent scaling with cover distance) use cos and sin of the angle.
+			return new Vector(Math.cos(angle), Math.sin(angle));
+		}
+
+		//by Edel Sherratt October 2022
+		async function save_score(){
+			//set up the 2 vars to save
+			const nameToSave = player_name;
+			const score = totalScore;
+
+			// Use the JavaScript fetch() method to run the php program on the server
+			// Using GET to make it easier to send score, which isn't in a form.
+			const response = await fetch(`save_score.php?name=${nameToSave}&score=${score}`, {
+				method: 'GET'
+			})
+
+			if(response.ok){
+				//refresh the leaderboard if the leaderboard is not full, or if the new score is greater than the lowest score on the leaderboard
+				if (the_leaderboard.names_scores.length < the_leaderboard.max_entries) {
+					display_leaderboard()
+
+				} else if (score > the_leaderboard.names_scores[the_leaderboard.names_scores.length - 1].score) {
+					display_leaderboard()
+				}
+			} else {
+				console.log("could not save score");
+			}
+		}
+
+		//by Edel Sherratt October 2022
+		function createLeaderBoardRow(player_name, player_score){
+			const row = document.createElement("tr");
+
+			//the player name
+			const name_data = document.createElement("td");
+			name_data.innerHTML = player_name;
+			row.append(name_data);
+
+			//the player score
+			const score_data = document.createElement("td");
+			score_data.innerHTML = player_score;
+			row.append(score_data);
+
+			return row;
+		}
+
+		//by Edel Sherratt October 2022
+		async function display_leaderboard(){
+			const top_scores = document.getElementById("top_scores");
+
+			//remove all the names and scores from the body of the displayed leaderboard
+			while(top_scores.hasChildNodes()){
+				top_scores.removeChild(top_scores.firstChild);
+			}
+
+			//and clear the numerics scores from the_leaderboard
+			the_leaderboard.scores = [];
+
+			const names_scores_response = await fetch(`top_n_names_scores.php?n=${the_leaderboard.max_entries}`)
+			{
+				method: 'GET'
+			}
+
+			if(names_scores_response.ok){
+				//names_scores_response is an entire http response, encoded as JSON
+				//.json() extracts the json bodt part of the HTTP response, and returns a JavaScript object that we can work with
+				const names_scores = await names_scores_response.json();
+
+				//add a row to the leaderboard for each name and score
+				names_scores.forEach(
+						function(value){
+							//each entry in names_scores is a string like '("name", "score")'
+
+							//remove the (, the ) and then the ,
+							const name_score = value.replace('(', '').replace(')','').split(",");
+
+							//so name_score now looks like ["name", "score"]
+							//which we can use to create a new row for the displayed leaderboard
+							top_scores.appendChild(createLeaderBoardRow(name_score[0], name_score[1]));
+
+							//an in-memory array that represents the leaderboard
+							//in the code, onlt the scores are used
+
+							the_leaderboard.names_scores.push({name: name_score[0], score: parseInt(name_score[1])});
+						}
+				)
+			}
+		}
+
+		//circle object definition
+		function circle(xPos, yPos, distance, direction, speed, creationTime, lastUpdateTime, faceNum, isTarget, faceToShow){
+			this.direction = direction;
+			this.distance = distance;
+			this.speed = speed;
+			this.creationTime = creationTime;
+			this.startposition = new Vector(xPos, yPos);
+			this.position = new Vector(xPos, yPos);
+			this.lastUpdateTime = lastUpdateTime;
+			this.faceNum = faceNum;
+			this.isTarget = isTarget;
+			this.faceToShow = faceToShow;
+		}
+
+		//updates the cirlces position based on direction and speed
+		circle.prototype.update = function(updateTime){
+			//deltaTime takes the time it was last updated and the time this update was called to find out how much to move by this update
+			var deltaTime = updateTime - this.lastUpdateTime;
+			//last update time is then updated for the next frame
+			this.lastUpdateTime = updateTime;
+
+			//cover distance takes speed and the delta time to make a scalar for the posistion vector
+			var coverDistance = deltaTime * this.speed;
+
+			var x = this.position.x;
+			var y = this.position.y;
+
+			/** checks to see if the length of the vector between the start position and current position + the distance to cover this frame
+			 *  is greater than the faces distance attribute, if it is the face chooses a new direction to go in and updates the startposition
+			 *  to the current position
+			 */
+			if(this.position.difference(this.startposition).vectorLength() + coverDistance > this.distance){
+				this.direction = chooseNewDirection();
+				this.distance = Math.random() * (400) + 100;
+				this.speed = Math.random() * 0.1 + 0.01;
+				this.startposition = this.position;
+			}
+
+			//if the position has reached the bounds of the canvas(10% bounds), bounce it back in the direction it came
+			this.edgeCheck(x,y);
+
+			//finally the position vector is updated by adding the correctly scaled direction vector to the position vector
+			this.position = this.position.addVectors(this.direction.scale(coverDistance));
+
+			//draws the face
+			this.drawFace();
+		}
+
+		//simply draws a face at the faces x and y position
+		circle.prototype.drawFace = function(){
+			ctx.drawImage(this.faceToShow, this.position.x - 50, this.position.y - 50, 96, 96);
+		}
+
+		//checks if the circle is within 10% of the edge of the canvas if it is make it go the opposite direction and a random speed and distance variable
+		circle.prototype.edgeCheck = function (x, y){
+			if(x >= canv.width*0.9 || x <= canv.width*0.1 || y >= canv.height*0.9 || y <= canv.height*0.1){
+				this.direction = this.direction.scale(-1);
+				this.distance = Math.random() * (400) + 100;
+				this.speed = Math.random() * 0.1 + 0.01;
+				this.startposition = this.position;
+			}
+		}
+
+		//responsible for drawing the target in the target frame
+		circle.prototype.drawTarget = function (){
+			ctx.fillStyle = "#050505";
+			ctx.font = "30px Arial";
+			ctx.fillText("Target", canv.width/(canv.width/(canv.height))*0.045, (canv.height * 0.07));
+
+			ctx.drawImage(this.faceToShow, canv.width*0.033, (canv.height * 0.085), 72, 72);
+		}
+
+		//for use in moving the balls around
+		function Vector(x, y){
+			this.x = x;
+			this.y = y;
+		}
+
+		//adds 2 vectors together
+		Vector.prototype.addVectors = function(vector2add){
+			return new Vector(this.x + vector2add.x, this.y + vector2add.y);
+		}
+
+		//takes one vector away from the other
+		Vector.prototype.difference = function(vector2minus){
+			return new Vector(this.x - vector2minus.x, this.y - vector2minus.y);
+		}
+
+		//returns the length of the vector
+		Vector.prototype.vectorLength = function(){
+			return Math.sqrt(this.x * this.x + this.y * this.y);
+		}
+
+		//scales up the given vector by given scale Factor and returns it
+		Vector.prototype.scale = function(scaleFactor){
+			return new Vector(this.x * scaleFactor, this.y*scaleFactor);
+		}
+
+        return { start_game: start_game_screen(), display_leaderboard: display_leaderboard, save_score: save_score} // an object with a single attribute, start_game, whose value is the function start_game()
+
+    }() // run the function so that the object with attribute start_game is assigned to clicky_namespace
+
+</script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+.grid-container {
+    display: grid;
+    grid-template-areas:
+            "header header header header"
+            "score content content sidebar"
+            "footer footer footer footer";
+    grid-template-columns: 15% 35% 35% 13%;
+    grid-template-rows: 5% 75% 10%;
+    column-gap: 1vw;
+}
+
+@font-face {
+    font-family: quirky_robot;
+    src: url("Fonts/QuirkyRobot.ttf");
+}
+
+.title{
+    grid-area: header;
+    grid-column-start: 2;
+    grid-column-end: 4;
+    text-align: center;
+    font-family: quirky_robot;
+}
+
+.title h1{
+    font-size: 80px;
+    margin-bottom: 2vh;
+    margin-top: 2vh;
+}
+
+.title h2{
+    font-size: 25px;
+    margin-bottom: 1vh;
+    margin-top: 1vh;
+}
+
+.game_canvas{
+    grid-column-start: 2;
+    grid-column-end: 4;
+    cursor: crosshair;
+}
+
+.instructions {
+    padding-right: 2vw;
+    font-family: quirky_robot;
+    font-size: 20px;
+    letter-spacing: 1.7px;
+}
+
+.instructions h1{
+    margin-bottom: 1.5vh;
+    margin-top: 0;
+}
+
+.scores{
+    display: grid;
+    grid-area: score;
+    font-family: quirky_robot;
+}
+
+#names_scores caption {
+    font-size: 60px;
+    background-color: #8696a6;
+    padding-top: 1vh;
+}
+
+#names_scores thead tr{
+    font-size: 40px;
+    background-color: #8696a6;
+}
+
+#top_scores tr {
+    font-size: 25px;
+    padding-top: 0.5vh;
+    padding-left: 1.5vw;
+    background-color: #cae6e5;
+    letter-spacing: 1px;
+}
+
+#top_scores tr:hover {
+    background-color: #8696a6;
+    color: black;
+}
+
+#top_scores tr td {
+    padding-left: 1.5vw;
+}
+
+#top_scores tr{
+    padding-bottom: 5vh;
+}
+
+.instructions{
+    grid-area: sidebar;
+}
